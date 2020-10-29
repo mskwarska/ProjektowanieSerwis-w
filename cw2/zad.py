@@ -39,18 +39,18 @@ krotki = [(999999, "Imie1", "Nazwisko1"), (999998, "Imie2", "Nazwisko2")]
 
 studenci = {
     "Student1": {
-        "Indeks": 999999,
-        "Imie": "Imie1",
-        "Nazwisko": "Nazwisko1",
+        "Indeks": krotki[0][0],
+        "Imie": krotki[0][1],
+        "Nazwisko": krotki[0][2],
         "Wiek": 21,
         "Email": "email1@email.com",
         "RokUrodzenia": 1999,
         "Adres": "Adres1"
     },
     "Student2": {
-        "Indeks": 999998,
-        "Imie": "Imie2",
-        "Nazwisko": "Nazwisko2",
+        "Indeks": krotki[1][0],
+        "Imie": krotki[1][1],
+        "Nazwisko": krotki[1][2],
         "Wiek": 22,
         "Email": "email2@email.com",
         "RokUrodzenia": 1998,
