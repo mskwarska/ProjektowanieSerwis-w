@@ -112,5 +112,4 @@ imiona_męskie={
 
 lista_imion= [imiona_damskie, imiona_męskie]
 listToStr = ' '.join(map(str, lista_imion)) #za pomoca list comprehension
-
 print(listToStr)
