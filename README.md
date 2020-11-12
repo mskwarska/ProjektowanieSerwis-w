@@ -1,3 +1,3 @@
 # Model bazy danych
 
-![alt text](https://github.com/mskwarska/ProjektowanieSerwisow/blob/master/Tabelki.png)
+![alt text](https://github.com/mskwarska/ProjektowanieSerwisow/blob/master/db_schema.png)
