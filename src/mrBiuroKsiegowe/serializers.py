@@ -3,20 +3,20 @@ import models as md
 
 class AccountSerializer(serializers.Serializer):
     Id = serializers.IntegerField(read_only=True)
-    Email = serializers.CharField(max_length=45, allow_blank=False)
-    Password = serializers.CharField(max_length=45, allow_blank=False)
+    Email = serializers.CharField(max_length=45, allow_null=False)
+    Password = serializers.CharField(max_length=45, allow_null=False)
 
 class ClientSerializer(serializers.Serializer):
     Id = serializers.IntegerField(read_only=True)
     AccountId = serializers.PrimaryKeyRelatedField(many=False)
-    Name = serializers.CharField(max_length=45, allow_blank=False)
-    Surname = serializers.CharField(max_length=45, allow_blank=False)
-    PhoneNumber = serializers.CharField(max_length=45, allow_blank=False)
-    PESEL = serializers.CharField(max_length=45, allow_blank=False)
-    CompanyName = serializers.CharField(max_length=45, allow_blank=True)
-    CompanyAddress = serializers.CharField(max_length=45, allow_blank=True)
-    NIP = serializers.CharField(max_length=45, allow_blank=True)
-    REGON = serializers.CharField(max_length=45, allow_blank=True)
+    Name = serializers.CharField(max_length=45, allow_null=False)
+    Surname = serializers.CharField(max_length=45, allow_null=False)
+    PhoneNumber = serializers.CharField(max_length=45, allow_null=False)
+    PESEL = serializers.CharField(max_length=45, allow_null=False)
+    CompanyName = serializers.CharField(max_length=45, allow_null=True)
+    CompanyAddress = serializers.CharField(max_length=45, allow_null=True)
+    NIP = serializers.CharField(max_length=45, allow_null=True)
+    REGON = serializers.CharField(max_length=45, allow_null=True)
 
     def create(self, validated_data, accountId):
         validated_data.AccountId = accountId
@@ -40,7 +40,7 @@ class ClientSerializer(serializers.Serializer):
 
 class DocumentTypeSerializer(serializers.Serializer):
     Id = serializers.IntegerField(read_only=True)
-    Type = serializers.CharField(max_length=45, allow_blank=False)
+    Type = serializers.CharField(max_length=45, allow_null=False)
 
 class DocumentSerializer(serializers.Serializer):
     Id = serializers.IntegerField(read_only=True)
@@ -50,12 +50,12 @@ class DocumentSerializer(serializers.Serializer):
 
 class CurrencySerializer(serializers.Serializer):
     Id = serializers.IntegerField(read_only=True)
-    Name = serializers.CharField(max_length=45, allow_blank=False)
+    Name = serializers.CharField(max_length=45, allow_null=False)
 
 class PurchasesSalesSerializer(serializers.Serializer):
     Id = serializers.IntegerField(read_only=True)
     DocumentTypeId = serializers.PrimaryKeyRelatedField(many=False)
-    ProductName = serializers.CharField(max_length=45, allow_blank=False)
+    ProductName = serializers.CharField(max_length=45, allow_null=False)
     NetAmount = serializers.DecimalField(decimal_places=2, max_digits=2, validators=[validate_netAmount])
     GrossAmount = serializers.DecimalField(decimal_places=2, max_digits=2, validators=[validate_grossAmount])
     CurrencyId = serializers.PrimaryKeyRelatedField(many=False)
@@ -78,7 +78,7 @@ class PurchasesSalesSerializer(serializers.Serializer):
 
 class PITSerializer(serializers.Serializer):
     Id = serializers.IntegerField(read_only=True)
-    Name = serializers.CharField(max_length=45, allow_blank=False)
+    Name = serializers.CharField(max_length=45, allow_null=False)
     Tax = serializers.IntegerField(validators=[validate_Tax])
 
     def validate_Tax(self, value):
@@ -90,8 +90,8 @@ class DeclarationSerializer(serializers.Serializer):
     Id = serializers.IntegerField(read_only=True)
     DocumentId = serializers.PrimaryKeyRelatedField(many=False)
     PIT_Id = serializers.PrimaryKeyRelatedField(many=False)
-    Ammount = serializers.CharField(max_length=45, allow_blank=True, validators=[validate_Amount])
-    Department = serializers.CharField(max_length=45, allow_blank=True)
+    Ammount = serializers.CharField(max_length=45, allow_null=True, validators=[validate_Amount])
+    Department = serializers.CharField(max_length=45, allow_null=True)
     DateFrom = serializers.DateTimeField()
     DateTo = serializers.DateTimeField()
 
