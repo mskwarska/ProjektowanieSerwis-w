@@ -22,13 +22,13 @@ def update(self, instance, validated_data):
     instance.save()
     return instance
 
-class AccountsSerializer(serializers.Serializer):
+class AccountsSerializer(serializers.ModelSerializer):
     Id = serializers.IntegerField(read_only=True)
     Email = serializers.EmailField(allow_null=False, max_length=45 )
     Password = serializers.CharField(allow_null=False, max_length=45)
 
 
-class ClientSerializer(serializers.Serializer):
+class ClientSerializer(serializers.ModelSerializer):
     Id = serializers.IntegerField(read_only=True)
     AccountId = serializers.PrimaryKeyRelatedField(many=False, read_only=True)
     Name = serializers.CharField(allow_null=False, max_length=45)
@@ -45,7 +45,7 @@ def validate_date(value):
         if value > today:
             raise ValidationError('Data nie może być w przyszłości')
 
-class DocumentsSerializer(serializers.Serializer):
+class DocumentsSerializer(serializers.ModelSerializer):
     Id = serializers.IntegerField(read_only=True)
     DocumentTypeId = serializers.PrimaryKeyRelatedField(many=False, read_only=True)
     ClientId = serializers.PrimaryKeyRelatedField(many=False, read_only=True)
@@ -57,7 +57,7 @@ def validate_amount(self, value):
         raise serializers.ValidationError("Suma pieniędzy nie może być ujemna")
     return  value
 
-class DeclarationsSerializer(serializers.Serializer):
+class DeclarationsSerializer(serializers.ModelSerializer):
     Id = serializers.IntegerField(read_only=True)
     DocumentId = serializers.PrimaryKeyRelatedField(many=False, read_only=True)
     PIT_Id = serializers.PrimaryKeyRelatedField(many=False, read_only=True)
@@ -66,7 +66,7 @@ class DeclarationsSerializer(serializers.Serializer):
     DateFrom = serializers.DateTimeField(allow_null=False, validators=[validate_date(limit_value=date.today)])
     DateTo = serializers.DateTimeField(allow_null=False, validators=[validate_date(limit_value=date.today)])
 
-class DocumentTypeSerializer(serializers.Serializer):
+class DocumentTypeSerializer(serializers.ModelSerializer):
     Id = serializers.IntegerField(read_only=True)
     Type = serializers.CharField(allow_null=False, max_length=45)
 
