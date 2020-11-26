@@ -2,7 +2,7 @@ from django.db import models
 
 class Accounts(models.Model):
     Id=models.AutoField(primary_key=True)
-    Email=models.CharField(max_length=45)
+    Email=models.EmailField(max_length=45)
     Password=models.CharField(max_length=45)
 
 class Client(models.Model):
@@ -18,7 +18,8 @@ class Client(models.Model):
     REGON = models.IntegerField
 
 class DocumentType(models.Model):
-    Id = models.AutoField(primary_key=True)
+    Id = models.AutoField(many=False,
+        read_only=True)
     Type = models.CharField(max_length=45)
 
 class Documents(models.Model):
