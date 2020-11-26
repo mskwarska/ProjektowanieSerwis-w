@@ -9,16 +9,15 @@ def create(self, validated_data):
 
 
 def update(self, instance, validated_data):
-    instance.Id = validated_data.get('Id', instance.email)
-    instance.AccountId = validated_data.get('AccountId', instance.content)
-    instance.Name = validated_data.get('Name', instance.created)
-    instance.Surname = validated_data.get('Surname', instance.created)
-    instance.PhoneNumber = validated_data.get('PhoneNumber', instance.created)
-    instance.PESEL = validated_data.get('PESEL', instance.created)
-    instance.CompanyName = validated_data.get('CompanyName', instance.created)
-    instance.CompanyAdress = validated_data.get('CompanyAdress', instance.created)
-    instance.NIP = validated_data.get('NIP', instance.created)
-    instance.REGON = validated_data.get('REGON', instance.created)
+    instance.AccountId = validated_data.get('AccountId', instance.AccountId)
+    instance.Name = validated_data.get('Name', instance.Name)
+    instance.Surname = validated_data.get('Surname', instance.Surname)
+    instance.PhoneNumber = validated_data.get('PhoneNumber', instance.PhoneNumber)
+    instance.PESEL = validated_data.get('PESEL', instance.PESEL)
+    instance.CompanyName = validated_data.get('CompanyName', instance.CompanyName)
+    instance.CompanyAdress = validated_data.get('CompanyAdress', instance.CompanyAdress)
+    instance.NIP = validated_data.get('NIP', instance.NIP)
+    instance.REGON = validated_data.get('REGON', instance.REGON)
     instance.save()
     return instance
 
