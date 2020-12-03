@@ -38,6 +38,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
+    #'drf_auto_endpoint', # nie jestem pewna czy jest potrzebne?
 ]
 
 MIDDLEWARE = [

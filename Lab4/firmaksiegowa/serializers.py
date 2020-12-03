@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from firmaksiegowa.models import Accounts,Client, Documents, Declarations
+from firmaksiegowa.models import Account,Client, Document, Declarations
 from datetime import date
 from django.core.exceptions import ValidationError
 
@@ -21,7 +21,7 @@ def update(self, instance, validated_data):
     instance.save()
     return instance
 
-class AccountsSerializer(serializers.ModelSerializer):
+class AccountSerializer(serializers.ModelSerializer):
     Id = serializers.IntegerField(read_only=True)
     Email = serializers.EmailField(allow_null=False, max_length=45 )
     Password = serializers.CharField(allow_null=False, max_length=45)
@@ -44,7 +44,7 @@ def validate_date(value):
         if value > today:
             raise ValidationError('Data nie może być w przyszłości')
 
-class DocumentsSerializer(serializers.ModelSerializer):
+class DocumentSerializer(serializers.ModelSerializer):
     Id = serializers.IntegerField(read_only=True)
     DocumentTypeId = serializers.PrimaryKeyRelatedField(many=False, read_only=True)
     ClientId = serializers.PrimaryKeyRelatedField(many=False, read_only=True)

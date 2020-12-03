@@ -1,13 +1,13 @@
 from django.db import models
 
-class Accounts(models.Model):
+class Account(models.Model):
     Id=models.AutoField(primary_key=True)
     Email=models.EmailField(max_length=45)
     Password=models.CharField(max_length=45)
 
 class Client(models.Model):
     Id = models.AutoField(primary_key=True)
-    AccountId = models.ForeignKey(Accounts, on_delete=models.CASCADE)
+    AccountId = models.ForeignKey(Account, on_delete=models.CASCADE)
     Name = models.CharField(max_length=45)
     Surname = models.CharField(max_length=45)
     PhoneNumber = models.CharField(max_length=45)
@@ -22,7 +22,7 @@ class DocumentType(models.Model):
         read_only=True)
     Type = models.CharField(max_length=45)
 
-class Documents(models.Model):
+class Document(models.Model):
     Id = models.AutoField(primary_key=True)
     DocumentTypeId = models.ForeignKey(DocumentType, on_delete=models.CASCADE)
     ClientId = models.ForeignKey(Client, on_delete=models.CASCADE)
