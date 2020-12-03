@@ -1,5 +1,5 @@
 from rest_framework import serializers
-import models as md
+from . import models as md
 
 class AccountSerializer(serializers.ModelSerializer):
     # Id = serializers.IntegerField(read_only=True)
@@ -44,7 +44,7 @@ class ClientSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = md.Client
-        fields = ['Id', 'AccountId', 'Name', 'Surname', 'PhoneNumber', 'PESEL', 'CompanyName', 'ComapnyAddress', 'NIP', 'REGON']
+        fields = ['Id', 'AccountId', 'Name', 'Surname', 'PhoneNumber', 'PESEL', 'CompanyName', 'CompanyAddress', 'NIP', 'REGON']
 
 class DocumentTypeSerializer(serializers.ModelSerializer):
     # Id = serializers.IntegerField(read_only=True)
@@ -98,7 +98,7 @@ class PurchasesSalesSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = md.PurchasesSales
-        fields = ['Id', 'DocumentTypeId', 'ProductName', 'NetAmount', 'GrossAmount', 'CurrencyId', 'Tax']
+        fields = ['Id', 'ProductName', 'NetAmount', 'GrossAmount', 'CurrencyId', 'Tax']
 
 class PITSerializer(serializers.ModelSerializer):
     # Id = serializers.IntegerField(read_only=True)
@@ -130,4 +130,4 @@ class DeclarationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = md.Declaration
-        fields = ['Id', 'DocumentId', 'PIT_Id', 'Amount', 'Department', 'DateFrom', 'DateTo']
+        fields = ['Id', 'DocumentId', 'PIT_Id', 'Ammount', 'Department', 'DateFrom', 'DateTo']
