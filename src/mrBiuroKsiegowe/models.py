@@ -18,6 +18,10 @@ class Client(models.Model):
     NIP = models.CharField(max_length=45, null=True)
     REGON = models.CharField(max_length=45, null=True)
 
+    @property
+    def GetClient(self):
+        return self.Name + ' ' + self.Surname + ' ' + self.CompanyName
+
 class DocumentType(models.Model):
     Id = models.AutoField(primary_key=True)
     Type = models.CharField(max_length=45, null=False)
@@ -25,7 +29,7 @@ class DocumentType(models.Model):
 class Document(models.Model):
     Id = models.AutoField(primary_key=True)
     DocumentTypeId = models.ForeignKey(DocumentType, on_delete=models.CASCADE)
-    ClientId = models.ForeignKey(Client, on_delete=models.CASCADE)
+    ClientId = models.ForeignKey(Client, related_name='documents', on_delete=models.CASCADE)
     Date = models.DateTimeField()
 
 class Currency(models.Model):
