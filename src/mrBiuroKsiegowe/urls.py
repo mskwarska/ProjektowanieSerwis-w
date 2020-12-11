@@ -18,4 +18,5 @@ urlpatterns  = [
     path('currency/<int:pk>/', views.CurrencyDetail.as_view(), name=views.CurrencyDetail.name),
     path('pit/', views.PITList.as_view(), name=views.PITList.name),
     path('pit/<int:pk>/', views.PITDetail.as_view(), name=views.PITDetail.name),
+    path('', views.ApiRoot.as_view(), name=views.ApiRoot.name),
 ]

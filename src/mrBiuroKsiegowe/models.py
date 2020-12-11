@@ -18,6 +18,9 @@ class Client(models.Model):
     NIP = models.CharField(max_length=45, null=True)
     REGON = models.CharField(max_length=45, null=True)
 
+    class Meta:
+        ordering = ('Name', 'Surname',)
+
     @property
     def GetClient(self):
         return self.Name + ' ' + self.Surname + ' ' + self.CompanyName
@@ -26,15 +29,24 @@ class DocumentType(models.Model):
     Id = models.AutoField(primary_key=True)
     Type = models.CharField(max_length=45, null=False)
 
+    class Meta:
+        ordering = ('Type',)
+
 class Document(models.Model):
     Id = models.AutoField(primary_key=True)
     DocumentTypeId = models.ForeignKey(DocumentType, on_delete=models.CASCADE)
     ClientId = models.ForeignKey(Client, related_name='documents', on_delete=models.CASCADE)
     Date = models.DateTimeField()
 
+    class Meta:
+        ordering = ('Date',)
+
 class Currency(models.Model):
     Id = models.AutoField(primary_key=True)
     Name = models.CharField(max_length=45, null=False)
+
+    class Meta:
+        ordering = ('Name',)
 
 class PurchasesSales(models.Model):
     Id = models.AutoField(primary_key=True)
@@ -44,11 +56,17 @@ class PurchasesSales(models.Model):
     GrossAmount = models.DecimalField(decimal_places=2, max_digits=2)
     CurrencyId = models.ForeignKey(Currency, on_delete=models.CASCADE)
     Tax = models.IntegerField()
-    
+
+    class Meta:
+        ordering = ('ProductName',)
+
 class PIT(models.Model):
     Id = models.AutoField(primary_key=True)
     Name = models.CharField(max_length=45, null=False)
     Tax = models.IntegerField()
+
+    class Meta:
+        ordering = ('Name',)
 
 class Declaration(models.Model):
     Id = models.AutoField(primary_key=True)
@@ -58,3 +76,6 @@ class Declaration(models.Model):
     Department = models.CharField(max_length=45)
     DateFrom = models.DateTimeField()
     DateTo = models.DateTimeField()
+
+    class Meta:
+        ordering = ('DateFrom', 'DateTo',)
