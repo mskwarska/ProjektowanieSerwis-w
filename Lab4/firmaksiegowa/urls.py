@@ -4,8 +4,8 @@ from django.urls import path, include
 from . import views
 
 urlpatterns = [
-    path('', views.index, name='index'),
-    url(r'^api-auth/', include('rest_framework.urls')),
+    #path('', views.index, name='index'),
+    #url(r'^api-auth/', include('rest_framework.urls')),
     path('account/', views.AccountList.as_view()),
     path('account/<int:pk>/', views.AccountDetail.as_view()),
     path('client/', views.ClientList.as_view()),

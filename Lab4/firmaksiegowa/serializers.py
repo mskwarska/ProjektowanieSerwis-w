@@ -2,6 +2,7 @@ from rest_framework import serializers
 from firmaksiegowa.models import Account,Client, Document, Declarations
 from datetime import date
 from django.core.exceptions import ValidationError
+from . import models as model
 
 
 def create(self, validated_data):
@@ -26,6 +27,10 @@ class AccountSerializer(serializers.ModelSerializer):
     Email = serializers.EmailField(allow_null=False, max_length=45 )
     Password = serializers.CharField(allow_null=False, max_length=45)
 
+    class Meta:
+        model = model.Client
+        fields = ['Id', 'AccountId', 'Name', 'Surname', 'PhoneNumber', 'PESEL', 'CompanyName', 'CompanyAddress', 'NIP', 'REGON']
+
 
 class ClientSerializer(serializers.ModelSerializer):
     Id = serializers.IntegerField(read_only=True)
@@ -36,20 +41,30 @@ class ClientSerializer(serializers.ModelSerializer):
     PESEL = serializers.CharField(allow_null=False, max_length=45)
     CompanyName = serializers.CharField(allow_null=True, max_length=45)
     CompanyAdress = serializers.CharField(allow_null=True, max_length=45)
-    NIP = serializers.IntegerField(allow_null=True, max_length=45)
-    REGON = serializers.IntegerField(allow_null=True, max_length=45)
+    NIP = serializers.IntegerField(allow_null=True)
+    REGON = serializers.IntegerField(allow_null=True)
 
-def validate_date(value):
+    class Meta:
+        model = model.Account
+        fields = ['Id', 'Email', 'Password']
+
+
+
+class DocumentSerializer(serializers.ModelSerializer):
+    def validate_date(self, value):
         today = date.today()
         if value > today:
             raise ValidationError('Data nie może być w przyszłości')
 
-class DocumentSerializer(serializers.ModelSerializer):
     Id = serializers.IntegerField(read_only=True)
     DocumentTypeId = serializers.PrimaryKeyRelatedField(many=False, read_only=True)
     ClientId = serializers.PrimaryKeyRelatedField(many=False, read_only=True)
-    Date = serializers.DateTimeField(validators=[validate_date(limit_value=date.today)])
+    Date = serializers.DateTimeField(validators=[validate_date])
 
+
+    class Meta:
+        model = model.Document
+        fields = ['Id', 'DocumentTypeId', 'ClientId', 'Date']
 
 def validate_amount(self, value):
     if value < 0:
@@ -57,21 +72,37 @@ def validate_amount(self, value):
     return  value
 
 class DeclarationsSerializer(serializers.ModelSerializer):
+    def validate_date(self, value):
+        today = date.today()
+        if value > today:
+            raise ValidationError('Data nie może być w przyszłości')
     Id = serializers.IntegerField(read_only=True)
     DocumentId = serializers.PrimaryKeyRelatedField(many=False, read_only=True)
     PIT_Id = serializers.PrimaryKeyRelatedField(many=False, read_only=True)
-    Amount = serializers.CharField(allow_null=False, max_length=45, validators=[validate_amount()])
+    Amount = serializers.CharField(allow_null=False, max_length=45, validators=[validate_amount])
     Department = serializers.CharField(allow_null=False, max_length=45)
-    DateFrom = serializers.DateTimeField(allow_null=False, validators=[validate_date(limit_value=date.today)])
-    DateTo = serializers.DateTimeField(allow_null=False, validators=[validate_date(limit_value=date.today)])
+    DateFrom = serializers.DateTimeField(allow_null=False, validators=[validate_date])
+    DateTo = serializers.DateTimeField(allow_null=False, validators=[validate_date])
+
+    class Meta:
+        model = model.Declarations
+        fields = ['Id', 'DocumentId', 'PIT_Id', 'Ammount', 'Department', 'DateFrom', 'DateTo']
 
 class DocumentTypeSerializer(serializers.ModelSerializer):
     Id = serializers.IntegerField(read_only=True)
     Type = serializers.CharField(allow_null=False, max_length=45)
 
+    class Meta:
+        model = model.DocumentType
+        fields = ['Id', 'Type']
+
 class CurrencySerializer(serializers.Serializer):
     Id = serializers.IntegerField(read_only=True)
     Name = serializers.CharField(allow_null=False, max_length=45)
+
+    class Meta:
+        model = model.Currency
+        fields = ['Id', 'Name']
 
 def validate_tax(self, value):
     if value < 0:
@@ -83,12 +114,20 @@ class Purchases_SalesSerializer(serializers.Serializer):
     Id = serializers.IntegerField(read_only=True)
     DocumentTypeId = serializers.PrimaryKeyRelatedField(many=False, read_only=True)
     ProductName = serializers.CharField(allow_null=False, max_length=45)
-    NetAmount = serializers.DecimalField(allow_null=False, decimal_places=2, max_digits=2, validators=[validate_amount()])
-    GrossAmount = serializers.DecimalField(allow_null=False, decimal_places=2, max_digits=2, validators=[validate_amount()])
+    NetAmount = serializers.DecimalField(allow_null=False, decimal_places=2, max_digits=2, validators=[validate_amount])
+    GrossAmount = serializers.DecimalField(allow_null=False, decimal_places=2, max_digits=2, validators=[validate_amount])
     CurrencyId = serializers.PrimaryKeyRelatedField(many=False, read_only=True)
     Tax = serializers.IntegerField(allow_null=False, validators=[validate_tax])
+
+    class Meta:
+        model = model.Purchases_Sales
+        fields = ['Id', 'ProductName', 'NetAmount', 'GrossAmount', 'CurrencyId', 'Tax']
 
 class PITSerializer(serializers.Serializer):
     Id = serializers.IntegerField(read_only=True)
     Name = serializers.CharField(allow_null=False, max_length=45)
     Tax = serializers.IntegerField(allow_null=False, validators=[validate_tax])
+
+    class Meta:
+        model = model.PIT
+        fields = ['Id', 'Name', 'Tax']

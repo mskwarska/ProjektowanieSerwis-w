@@ -18,8 +18,7 @@ class Client(models.Model):
     REGON = models.IntegerField
 
 class DocumentType(models.Model):
-    Id = models.AutoField(many=False,
-        read_only=True)
+    Id = models.AutoField(primary_key=True)
     Type = models.CharField(max_length=45)
 
 class Document(models.Model):

@@ -1,4 +1,3 @@
-from django.shortcuts import render
 from django.http import HttpResponse, Http404
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -8,9 +7,6 @@ from firmaksiegowa.serializers import AccountSerializer, ClientSerializer, Docum
     DeclarationsSerializer, DocumentTypeSerializer, CurrencySerializer, Purchases_SalesSerializer, PITSerializer
 from firmaksiegowa.models import Account, Client, DocumentType, Document, Currency, Purchases_Sales, PIT, Declarations
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
-
-# def index(request):
-#     return HttpResponse("Hello its my frist view")
 
 # Można również w ten sposób
 # class AccountList(APIView):
