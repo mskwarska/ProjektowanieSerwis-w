@@ -1,41 +1,30 @@
+from django.contrib.auth.models import User
 from rest_framework import serializers
 from . import models as md
 
-class AccountSerializer(serializers.ModelSerializer):
+class UserClientSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
-        model = md.Account
-        fields = ['Id', 'Email', 'Password']
+        model = md.Client
+        fields = ['GetClient']
+    
+class UserSerializer(serializers.HyperlinkedModelSerializer):
+    Clients = UserClientSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = User
+        fields = ['Clients', 'pk', 'username']
 
 class ClientSerializer(serializers.HyperlinkedModelSerializer):
-
+    User = serializers.ReadOnlyField(source='User.email')
     documents = serializers.HyperlinkedRelatedField(
         many=True,
         read_only=True,
         view_name='document-detail'
     )
 
-    def create(self, validated_data):
-        client = md.Client.objects.create(**validated_data)
-        return client
-
-    def update(self, instance, validated_data, accountId):
-        instance = validated_data
-        instance.AccountId = accountId
-        instance.Name = validated_data.get('Name', instance.Name)
-        instance.Surname = validated_data.get('Surname', instance.Surname)
-        instance.PhoneNumber = validated_data.get('PhoneNumber', instance.PhoneNumber)
-        instance.PESEL = validated_data.get('PESEL', instance.PESEL)
-        instance.CompanyName = validated_data.get('CompanyName', instance.CompanyName)
-        instance.CompanyAddress = validated_data.get('CompanyAddress', instance.CompanyAddress)
-        instance.NIP = validated_data.get('NIP', instance.NIP)
-        instance.REGON = validated_data.get('REGON', instance.REGON)
-        instance.save()
-
-        return instance
-
     class Meta:
         model = md.Client
-        fields = ['Id', 'AccountId', 'Name', 'Surname', 'PhoneNumber', 'PESEL', 'CompanyName', 'CompanyAddress', 'NIP', 'REGON', 'documents']
+        fields = ['Id', 'User', 'Name', 'Surname', 'PhoneNumber', 'PESEL', 'CompanyName', 'CompanyAddress', 'NIP', 'REGON', 'documents']
 
 class DocumentTypeSerializer(serializers.ModelSerializer):
     class Meta:
@@ -45,9 +34,13 @@ class DocumentTypeSerializer(serializers.ModelSerializer):
 class DocumentSerializer(serializers.HyperlinkedModelSerializer):
     DocumentTypeId = serializers.SlugRelatedField(queryset=md.DocumentType.objects.all(), slug_field='Type')
     ClientId = serializers.SlugRelatedField(queryset=md.Client.objects.all(), slug_field='GetClient')
+
+    def perform_create(self, serializer):
+        serializer.save(CreatedBy=self.request.user)
+
     class Meta:
         model = md.Document
-        fields = ['Id', 'DocumentTypeId', 'ClientId', 'Date']
+        fields = ['Id', 'DocumentTypeId', 'ClientId', 'CreatedBy', 'Date']
 
 class CurrencySerializer(serializers.ModelSerializer):
     class Meta:

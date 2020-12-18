@@ -1,9 +1,12 @@
 from django.urls import path
 from . import views
 
+#admin1
+#Password123456789
+
 urlpatterns  = [
-    path('account/', views.AccountList.as_view(), name=views.AccountList.name),
-    path('account/<int:pk>/', views.AccountDetail.as_view(), name=views.AccountDetail.name),
+    path('user/', views.UserList.as_view(), name=views.UserList.name),
+    path('user/<int:pk>/', views.UserDetail.as_view(), name=views.UserDetail.name),
     path('client/', views.ClientList.as_view(), name=views.ClientList.name),
     path('client/<int:pk>/', views.ClientDetail.as_view(), name=views.ClientDetail.name),
     path('document/', views.DocumentList.as_view(), name=views.DocumentList.name),

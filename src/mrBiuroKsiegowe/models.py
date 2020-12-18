@@ -1,14 +1,10 @@
 from django.db import models
 
 # Create your models here.
-class Account(models.Model):
-    Id = models.AutoField(primary_key=True)
-    Email = models.CharField(max_length=45, null=False)
-    Password = models.CharField(max_length=45, null=False)
 
 class Client(models.Model):
     Id = models.AutoField(primary_key=True)
-    AccountId = models.ForeignKey(Account, on_delete=models.CASCADE)
+    User = models.ForeignKey('auth.User', related_name='Clients', on_delete=models.CASCADE)
     Name = models.CharField(max_length=45, null=False)
     Surname = models.CharField(max_length=45, null=False)
     PhoneNumber = models.CharField(max_length=45, null=False)
@@ -36,6 +32,7 @@ class Document(models.Model):
     Id = models.AutoField(primary_key=True)
     DocumentTypeId = models.ForeignKey(DocumentType, on_delete=models.CASCADE)
     ClientId = models.ForeignKey(Client, related_name='documents', on_delete=models.CASCADE)
+    CreatedBy = models.ForeignKey('auth.User', related_name='DocumentCreatedBy', on_delete=models.CASCADE)
     Date = models.DateTimeField()
 
     class Meta:

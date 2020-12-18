@@ -1,26 +1,24 @@
-from django.http import HttpResponse
-from django.http import Http404
+from django.http import HttpResponse, Http404
+from django.contrib.auth.models import User
 from rest_framework import status, generics
 from rest_framework.views import APIView
 from rest_framework.reverse import reverse
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from rest_framework.permissions import IsAuthenticated, IsAdminUser, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from django_filters import FilterSet, DateTimeFilter, AllValuesFilter, NumberFilter
 
-from .models import Account, Client, Document, DocumentType, PurchasesSales, Declaration, Currency, PIT
-from .serializers import AccountSerializer, ClientSerializer, DocumentSerializer, DocumentTypeSerializer, PurchasesSalesSerializer, DeclarationSerializer, CurrencySerializer, PITSerializer
+from .models import Client, Document, DocumentType, PurchasesSales, Declaration, Currency, PIT
+from .serializers import UserSerializer, ClientSerializer, DocumentSerializer, DocumentTypeSerializer, PurchasesSalesSerializer, DeclarationSerializer, CurrencySerializer, PITSerializer
 
-class AccountList(generics.ListCreateAPIView):
-    permission_classes = [IsAdminUser]
-    queryset = Account.objects.all()
-    serializer_class = AccountSerializer
-    name = 'account-list'
+class UserList(generics.ListAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    name = 'user-list'
 
-class AccountDetail(generics.RetrieveDestroyAPIView):
-    permission_classes = [IsAuthenticated]
-    queryset = Account.objects.all()
-    serializer_class = AccountSerializer
-    name = 'account-detail'
+class UserDetail(generics.RetrieveAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    name = 'user-detail'
 
 class ClientList(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticated]
@@ -31,11 +29,11 @@ class ClientList(generics.ListCreateAPIView):
     search_fields = ['Name', 'Surname', 'PhoneNumber', 'PESEL', 'CompanyName', 'CompanyAddress', 'NIP', 'REGON']
     ordering_fields = ['Name', 'Surname']
 
-class ClientDetail(generics.RetrieveDestroyAPIView):
+class ClientDetail(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthenticated]
     queryset = Client.objects.all()
     serializer_class = ClientSerializer
-    name='client-detail'
+    name='user-detail'
 
 class DocumentFilter(FilterSet):
     DateFrom = DateTimeFilter(field_name='Date', lookup_expr='gte')
@@ -61,7 +59,7 @@ class DocumentDetail(generics.RetrieveDestroyAPIView):
     name='document-detail'
 
 class DocumentTypeList(generics.ListCreateAPIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticatedOrReadOnly]
     queryset = DocumentType.objects.all()
     serializer_class = DocumentTypeSerializer
     name='documenttype-list'
@@ -70,7 +68,7 @@ class DocumentTypeList(generics.ListCreateAPIView):
     ordering_fields = ['Type']
 
 class DocumentTypeDetail(generics.RetrieveDestroyAPIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticatedOrReadOnly]
     queryset = DocumentType.objects.all()
     serializer_class = DocumentTypeSerializer
     name='documenttype-detail'
@@ -128,7 +126,7 @@ class DeclarationDetail(generics.RetrieveDestroyAPIView):
     name='declaration-detail'
 
 class CurrencyList(generics.ListCreateAPIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticatedOrReadOnly]
     queryset = Currency.objects.all()
     serializer_class = CurrencySerializer
     name='currency-list'
@@ -137,7 +135,7 @@ class CurrencyList(generics.ListCreateAPIView):
     ordering_fields = ['Name']
 
 class CurrencyDetail(generics.RetrieveDestroyAPIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticatedOrReadOnly]
     queryset = Currency.objects.all()
     serializer_class = CurrencySerializer
     name='currency-detail'
@@ -168,7 +166,8 @@ class PITDetail(generics.RetrieveDestroyAPIView):
 class ApiRoot(generics.GenericAPIView):
     name = 'api-root'
     def get(self, request, *args, **kwargs):
-        return Response({'client': reverse(ClientList.name, request=request),
+        return Response({ 'user': reverse(UserList.name, request=request),
+                          'client': reverse(ClientList.name, request=request),
                           'document': reverse(DocumentList.name, request=request),
                           'documentType': reverse(DocumentTypeList.name, request=request),
                           'purchasesSales': reverse(PurchasesSalesList.name, request=request),
