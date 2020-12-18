@@ -59,7 +59,7 @@ class DocumentDetail(generics.RetrieveDestroyAPIView):
     name='document-detail'
 
 class DocumentTypeList(generics.ListCreateAPIView):
-    permission_classes = [IsAuthenticatedOrReadOnly]
+    #permission_classes = [IsAuthenticatedOrReadOnly]
     queryset = DocumentType.objects.all()
     serializer_class = DocumentTypeSerializer
     name='documenttype-list'
@@ -68,7 +68,7 @@ class DocumentTypeList(generics.ListCreateAPIView):
     ordering_fields = ['Type']
 
 class DocumentTypeDetail(generics.RetrieveDestroyAPIView):
-    permission_classes = [IsAuthenticatedOrReadOnly]
+    #permission_classes = [IsAuthenticatedOrReadOnly]
     queryset = DocumentType.objects.all()
     serializer_class = DocumentTypeSerializer
     name='documenttype-detail'
@@ -126,7 +126,7 @@ class DeclarationDetail(generics.RetrieveDestroyAPIView):
     name='declaration-detail'
 
 class CurrencyList(generics.ListCreateAPIView):
-    permission_classes = [IsAuthenticatedOrReadOnly]
+    #permission_classes = [IsAuthenticatedOrReadOnly]
     queryset = Currency.objects.all()
     serializer_class = CurrencySerializer
     name='currency-list'
@@ -135,7 +135,7 @@ class CurrencyList(generics.ListCreateAPIView):
     ordering_fields = ['Name']
 
 class CurrencyDetail(generics.RetrieveDestroyAPIView):
-    permission_classes = [IsAuthenticatedOrReadOnly]
+    #permission_classes = [IsAuthenticatedOrReadOnly]
     queryset = Currency.objects.all()
     serializer_class = CurrencySerializer
     name='currency-detail'
@@ -149,7 +149,7 @@ class PitFilter(FilterSet):
         fields = ['TaxAmountFrom', 'TaxAmountTo', 'Name', 'Tax']
 
 class PITList(generics.ListCreateAPIView):
-    permission_classes = [IsAuthenticated]
+    #permission_classes = [IsAuthenticated]
     queryset = PIT.objects.all()
     serializer_class = PITSerializer
     name='pit-list'
@@ -158,7 +158,7 @@ class PITList(generics.ListCreateAPIView):
     filter_class = PitFilter
 
 class PITDetail(generics.RetrieveDestroyAPIView):
-    permission_classes = [IsAuthenticated]
+    #permission_classes = [IsAuthenticated]
     queryset = PIT.objects.all()
     serializer_class = PITSerializer
     name='pit-detail'
