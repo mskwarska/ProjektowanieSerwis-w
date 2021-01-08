@@ -1,27 +1,29 @@
 from django.http import HttpResponse, Http404
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from rest_framework import status, generics
 from rest_framework.views import APIView
 from rest_framework.reverse import reverse
-from rest_framework.permissions import IsAuthenticated, IsAdminUser, IsAuthenticatedOrReadOnly
+from rest_framework.permissions import DjangoModelPermissions, DjangoModelPermissionsOrAnonReadOnly, IsAdminUser
 from rest_framework.response import Response
 from django_filters import FilterSet, DateTimeFilter, AllValuesFilter, NumberFilter
 
 from .models import Client, Document, DocumentType, PurchasesSales, Declaration, Currency, PIT
-from .serializers import UserSerializer, ClientSerializer, DocumentSerializer, DocumentTypeSerializer, PurchasesSalesSerializer, DeclarationSerializer, CurrencySerializer, PITSerializer
+from .serializers import UserSerializer, ClientSerializer, ClientDetailSerializer, DocumentSerializer, DocumentTypeSerializer, PurchasesSalesSerializer, DeclarationSerializer, CurrencySerializer, PITSerializer
 
 class UserList(generics.ListAPIView):
+    permission_classes = [IsAdminUser]
     queryset = User.objects.all()
     serializer_class = UserSerializer
     name = 'user-list'
 
 class UserDetail(generics.RetrieveAPIView):
+    permission_classes = [IsAdminUser]
     queryset = User.objects.all()
     serializer_class = UserSerializer
     name = 'user-detail'
 
 class ClientList(generics.ListCreateAPIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [DjangoModelPermissions]
     queryset = Client.objects.all()
     serializer_class = ClientSerializer
     name='client-list'
@@ -29,11 +31,22 @@ class ClientList(generics.ListCreateAPIView):
     search_fields = ['Name', 'Surname', 'PhoneNumber', 'PESEL', 'CompanyName', 'CompanyAddress', 'NIP', 'REGON']
     ordering_fields = ['Name', 'Surname']
 
+    def get(self, request, format=None):
+        user = self.request.user
+
+        if user.is_superuser or Group.objects.get(name='Employees').user_set.filter(id=user.id).exists():
+            client = Client.objects.all()
+        else:
+            client = Client.objects.filter(User=user)
+
+        serializer = ClientSerializer(client, many=True)
+        return Response(serializer.data)
+
 class ClientDetail(generics.RetrieveUpdateDestroyAPIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [DjangoModelPermissions]
     queryset = Client.objects.all()
-    serializer_class = ClientSerializer
-    name='user-detail'
+    serializer_class = ClientDetailSerializer
+    name='client-detail'
 
 class DocumentFilter(FilterSet):
     DateFrom = DateTimeFilter(field_name='Date', lookup_expr='gte')
@@ -41,25 +54,25 @@ class DocumentFilter(FilterSet):
 
     class Meta:
         model = Document
-        fields = ['DateFrom', 'DateTo', 'ClientId', 'DocumentTypeId']
+        fields = ['DateFrom', 'DateTo', 'Client', 'DocumentType']
 
 class DocumentList(generics.ListCreateAPIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [DjangoModelPermissions]
     queryset = Document.objects.all()
     serializer_class = DocumentSerializer
     name='document-list'
-    search_fields = ['ClientId', 'Date', 'DocumentTypeId']
-    ordering_fields = ['ClientId', 'Date', 'DocumentTypeId']
+    search_fields = ['Client', 'Date', 'DocumentType']
+    ordering_fields = ['Client', 'Date', 'DocumentType']
     filter_class = DocumentFilter
 
-class DocumentDetail(generics.RetrieveDestroyAPIView):
-    permission_classes = [IsAuthenticated]
+class DocumentDetail(generics.RetrieveUpdateDestroyAPIView):
+    permission_classes = [DjangoModelPermissions]
     queryset = Document.objects.all()
     serializer_class = DocumentSerializer
     name='document-detail'
 
 class DocumentTypeList(generics.ListCreateAPIView):
-    #permission_classes = [IsAuthenticatedOrReadOnly]
+    permission_classes = [DjangoModelPermissionsOrAnonReadOnly]
     queryset = DocumentType.objects.all()
     serializer_class = DocumentTypeSerializer
     name='documenttype-list'
@@ -67,8 +80,8 @@ class DocumentTypeList(generics.ListCreateAPIView):
     search_fields = ['Type']
     ordering_fields = ['Type']
 
-class DocumentTypeDetail(generics.RetrieveDestroyAPIView):
-    #permission_classes = [IsAuthenticatedOrReadOnly]
+class DocumentTypeDetail(generics.RetrieveUpdateDestroyAPIView):
+    permission_classes = [DjangoModelPermissionsOrAnonReadOnly]
     queryset = DocumentType.objects.all()
     serializer_class = DocumentTypeSerializer
     name='documenttype-detail'
@@ -81,26 +94,24 @@ class PurchasesSalesFilter(FilterSet):
 
     class Meta:
         model = PurchasesSales
-        fields = ['NetAmountFrom', 'NetAmountTo', 'GrossAmountFrom', 'GrossAmountTo', 'DocumentId', 'ProductName']
+        fields = ['NetAmountFrom', 'NetAmountTo', 'GrossAmountFrom', 'GrossAmountTo', 'Document', 'ProductName']
 
 class PurchasesSalesList(generics.ListCreateAPIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [DjangoModelPermissions]
     queryset = PurchasesSales.objects.all()
     serializer_class = PurchasesSalesSerializer
     name='purchasessales-list'
-    search_fields = ['DocumentId', 'ProductName']
-    ordering_fields = ['DocumentId', 'ProductName', 'NetAmount', 'GrossAmount']
+    search_fields = ['Document', 'ProductName']
+    ordering_fields = ['Document', 'ProductName', 'NetAmount', 'GrossAmount']
     filter_class = PurchasesSalesFilter
 
-class PurchasesSalesDetail(generics.RetrieveDestroyAPIView):
-    permission_classes = [IsAuthenticated]
+class PurchasesSalesDetail(generics.RetrieveUpdateDestroyAPIView):
+    permission_classes = [DjangoModelPermissions]
     queryset = PurchasesSales.objects.all()
     serializer_class = PurchasesSalesSerializer
     name='purchasessales-detail'
 
 class DeclarationFilter(FilterSet):
-    AmmountFrom = NumberFilter(field_name='Ammount', lookup_expr='gte')
-    AmmountTo = NumberFilter(field_name='Ammount', lookup_expr='lte')
     DateFrom_From = DateTimeFilter(field_name='DateFrom', lookup_expr='gte')
     DateFrom_To = DateTimeFilter(field_name='DateFrom', lookup_expr='lte')
     DateTo_From = DateTimeFilter(field_name='DateTo', lookup_expr='gte')
@@ -108,25 +119,25 @@ class DeclarationFilter(FilterSet):
 
     class Meta:
         model = Declaration
-        fields = ['AmmountFrom', 'AmmountTo', 'DateFrom_From', 'DateFrom_To', 'DateTo_From', 'DateTo_To', 'DocumentId', 'PIT_Id', 'Department']
+        fields = ['DateFrom_From', 'DateFrom_To', 'DateTo_From', 'DateTo_To', 'Document', 'PIT', 'Department']
 
 class DeclarationList(generics.ListCreateAPIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [DjangoModelPermissions]
     queryset = Declaration.objects.all()
     serializer_class = DeclarationSerializer
     name='declaration-list'
-    search_fields = ['DocumentId', 'PIT_Id', 'Department', 'DateFrom', 'DateTo']
-    ordering_fields = ['DocumentId', 'PIT_Id', 'Ammount', 'Department', 'DateFrom', 'DateTo']
+    search_fields = ['Document', 'PIT', 'Department', 'DateFrom', 'DateTo']
+    ordering_fields = ['Document', 'PIT', 'Amount', 'Department', 'DateFrom', 'DateTo']
     filter_class = DeclarationFilter
 
-class DeclarationDetail(generics.RetrieveDestroyAPIView):
-    permission_classes = [IsAuthenticated]
+class DeclarationDetail(generics.RetrieveUpdateDestroyAPIView):
+    permission_classes = [DjangoModelPermissions]
     queryset = Declaration.objects.all()
     serializer_class = DeclarationSerializer
     name='declaration-detail'
 
 class CurrencyList(generics.ListCreateAPIView):
-    #permission_classes = [IsAuthenticatedOrReadOnly]
+    permission_classes = [DjangoModelPermissionsOrAnonReadOnly]
     queryset = Currency.objects.all()
     serializer_class = CurrencySerializer
     name='currency-list'
@@ -134,44 +145,35 @@ class CurrencyList(generics.ListCreateAPIView):
     search_fields = ['Name']
     ordering_fields = ['Name']
 
-class CurrencyDetail(generics.RetrieveDestroyAPIView):
-    #permission_classes = [IsAuthenticatedOrReadOnly]
+class CurrencyDetail(generics.RetrieveUpdateDestroyAPIView):
+    permission_classes = [DjangoModelPermissionsOrAnonReadOnly]
     queryset = Currency.objects.all()
     serializer_class = CurrencySerializer
     name='currency-detail'
 
-class PitFilter(FilterSet):
-    TaxAmountFrom = NumberFilter(field_name='Tax', lookup_expr='gte')
-    TaxAmountTo = NumberFilter(field_name='Tax', lookup_expr='lte')
-
-    class Meta:
-        model = PIT
-        fields = ['TaxAmountFrom', 'TaxAmountTo', 'Name', 'Tax']
-
 class PITList(generics.ListCreateAPIView):
-    #permission_classes = [IsAuthenticated]
+    permission_classes = [DjangoModelPermissions]
     queryset = PIT.objects.all()
     serializer_class = PITSerializer
     name='pit-list'
-    search_fields = ['Name', 'Tax']
-    ordering_fields = ['Name', 'Tax']
-    filter_class = PitFilter
+    search_fields = ['Name',]
+    ordering_fields = ['Name',]
 
-class PITDetail(generics.RetrieveDestroyAPIView):
-    #permission_classes = [IsAuthenticated]
+class PITDetail(generics.RetrieveUpdateDestroyAPIView):
+    permission_classes = [DjangoModelPermissions]
     queryset = PIT.objects.all()
     serializer_class = PITSerializer
     name='pit-detail'
 
 class ApiRoot(generics.GenericAPIView):
-    name = 'api-root'
+    name = 'Index'
     def get(self, request, *args, **kwargs):
-        return Response({ 'user': reverse(UserList.name, request=request),
-                          'client': reverse(ClientList.name, request=request),
-                          'document': reverse(DocumentList.name, request=request),
-                          'documentType': reverse(DocumentTypeList.name, request=request),
-                          'purchasesSales': reverse(PurchasesSalesList.name, request=request),
-                          'declaration': reverse(DeclarationList.name, request=request),
-                          'currency': reverse(CurrencyList.name, request=request),
-                          'pit': reverse(PITList.name, request=request)
+        return Response({ 'Users': reverse(UserList.name, request=request),
+                          'Clients': reverse(ClientList.name, request=request),
+                          'Documents': reverse(DocumentList.name, request=request),
+                          'Document types': reverse(DocumentTypeList.name, request=request),
+                          'Purchases and sales': reverse(PurchasesSalesList.name, request=request),
+                          'Declarations': reverse(DeclarationList.name, request=request),
+                          'Currencies': reverse(CurrencyList.name, request=request),
+                          'PITs': reverse(PITList.name, request=request)
 })

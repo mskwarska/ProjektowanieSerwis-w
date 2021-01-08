@@ -1,7 +1,7 @@
 from django.urls import path
 from . import views
 
-#admin1
+#admin
 #Password123456789
 
 urlpatterns  = [

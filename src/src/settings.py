@@ -38,7 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
-    'mrBiuroKsiegowe.apps.MrbiuroksiegoweConfig',
+    'BiuroKsiegowe.apps.BiuroKsiegoweConfig',
     'django_filters',
 ]
 
@@ -125,7 +125,7 @@ STATIC_URL = '/static/'
 
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS':
-    'mrBiuroKsiegowe.pagination.LimitOffsetPaginationWithUpperBound',
+    'BiuroKsiegowe.pagination.LimitOffsetPaginationWithUpperBound',
     'PAGE_SIZE': 5,
     'DEFAULT_FILTER_BACKENDS': (
         'django_filters.rest_framework.DjangoFilterBackend',
