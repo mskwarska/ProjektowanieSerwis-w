@@ -1,5 +1,6 @@
 from django.http import HttpResponse, Http404
 from django.contrib.auth.models import User, Group
+from django.db.models import Prefetch
 from rest_framework import status, generics
 from rest_framework.views import APIView
 from rest_framework.reverse import reverse
@@ -8,19 +9,29 @@ from rest_framework.response import Response
 from django_filters import FilterSet, DateTimeFilter, AllValuesFilter, NumberFilter
 
 from .models import Client, Document, DocumentType, PurchasesSales, Declaration, Currency, PIT
-from .serializers import UserSerializer, ClientSerializer, ClientDetailSerializer, DocumentSerializer, DocumentTypeSerializer, PurchasesSalesSerializer, DeclarationSerializer, CurrencySerializer, PITSerializer
+from .serializers import UserSerializer, ClientSerializer, ClientDetailSerializer, DocumentSerializer, DocumentTypeSerializer, PurchasesSalesSerializer, PurchasesSalesDetailSerializer, DeclarationSerializer, DeclarationDetailSerializer, CurrencySerializer, PITSerializer
 
 class UserList(generics.ListAPIView):
-    permission_classes = [IsAdminUser]
+    permission_classes = [DjangoModelPermissions]
     queryset = User.objects.all()
     serializer_class = UserSerializer
     name = 'user-list'
 
 class UserDetail(generics.RetrieveAPIView):
-    permission_classes = [IsAdminUser]
+    permission_classes = [DjangoModelPermissions]
     queryset = User.objects.all()
     serializer_class = UserSerializer
     name = 'user-detail'
+
+    def get_queryset(self):
+        user = self.request.user
+        
+        if user.is_superuser or Group.objects.get(name='Employees').user_set.filter(id=user.id).exists():
+            user = User.objects.all()
+        else:
+            user = User.objects.filter(id=user.id)
+
+        return user
 
 class ClientList(generics.ListCreateAPIView):
     permission_classes = [DjangoModelPermissions]
@@ -34,13 +45,20 @@ class ClientList(generics.ListCreateAPIView):
     def get(self, request, format=None):
         user = self.request.user
 
+        serializer_context = {
+            'request': request,
+        }
+
         if user.is_superuser or Group.objects.get(name='Employees').user_set.filter(id=user.id).exists():
             client = Client.objects.all()
         else:
             client = Client.objects.filter(User=user)
 
-        serializer = ClientSerializer(client, many=True)
-        return Response(serializer.data)
+        queryset = self.filter_queryset(client)
+        page = self.paginate_queryset(queryset)
+
+        serializer = ClientSerializer(page, many=True, context=serializer_context)
+        return self.get_paginated_response(serializer.data)
 
 class ClientDetail(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [DjangoModelPermissions]
@@ -48,28 +66,68 @@ class ClientDetail(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = ClientDetailSerializer
     name='client-detail'
 
+    def get_queryset(self):
+        user = self.request.user
+        
+        if user.is_superuser or Group.objects.get(name='Employees').user_set.filter(id=user.id).exists():
+            client = Client.objects.all()
+        else:
+            client = Client.objects.filter(User=user)
+
+        return client
+
 class DocumentFilter(FilterSet):
-    DateFrom = DateTimeFilter(field_name='Date', lookup_expr='gte')
-    DateTo = DateTimeFilter(field_name='Date', lookup_expr='lte')
+    CreationDateFrom = DateTimeFilter(field_name='CreationDate', lookup_expr='gte')
+    CreationDateTo = DateTimeFilter(field_name='CreationDate', lookup_expr='lte')
 
     class Meta:
         model = Document
-        fields = ['DateFrom', 'DateTo', 'Client', 'DocumentType']
+        fields = ['CreationDateFrom', 'CreationDateTo', 'Client', 'DocumentType']
 
 class DocumentList(generics.ListCreateAPIView):
     permission_classes = [DjangoModelPermissions]
     queryset = Document.objects.all()
     serializer_class = DocumentSerializer
     name='document-list'
-    search_fields = ['Client', 'Date', 'DocumentType']
-    ordering_fields = ['Client', 'Date', 'DocumentType']
+    search_fields = ['CreationDate', 'CreatedBy', 'DocumentType']
+    ordering_fields = ['CreationDate', 'CreatedBy', 'DocumentType']
     filter_class = DocumentFilter
+
+    def get(self, request, format=None):
+        user = self.request.user
+
+        serializer_context = {
+            'request': request,
+        }
+
+        if user.is_superuser or Group.objects.get(name='Employees').user_set.filter(id=user.id).exists():
+            document = Document.objects.all()
+        else:
+            client = Client.objects.get(User=user)
+            document = Document.objects.filter(Client=client)
+
+        queryset = self.filter_queryset(document)
+        page = self.paginate_queryset(queryset)
+
+        serializer = DocumentSerializer(page, many=True, context=serializer_context)
+        return self.get_paginated_response(serializer.data)
 
 class DocumentDetail(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [DjangoModelPermissions]
     queryset = Document.objects.all()
     serializer_class = DocumentSerializer
     name='document-detail'
+
+    def get_queryset(self):
+        user = self.request.user
+        
+        if user.is_superuser or Group.objects.get(name='Employees').user_set.filter(id=user.id).exists():
+            document = Document.objects.all()
+        else:
+            client = Client.objects.get(User=user)
+            document = Document.objects.filter(Client=client)
+
+        return document
 
 class DocumentTypeList(generics.ListCreateAPIView):
     permission_classes = [DjangoModelPermissionsOrAnonReadOnly]
@@ -101,15 +159,69 @@ class PurchasesSalesList(generics.ListCreateAPIView):
     queryset = PurchasesSales.objects.all()
     serializer_class = PurchasesSalesSerializer
     name='purchasessales-list'
-    search_fields = ['Document', 'ProductName']
-    ordering_fields = ['Document', 'ProductName', 'NetAmount', 'GrossAmount']
+    search_fields = ['ProductName']
+    ordering_fields = ['ProductName', 'NetAmount', 'GrossAmount']
     filter_class = PurchasesSalesFilter
+
+    def get(self, request, format=None):
+        user = self.request.user
+
+        serializer_context = {
+            'request': request,
+        }
+
+        if user.is_superuser or Group.objects.get(name='Employees').user_set.filter(id=user.id).exists():
+            purchasesSales = PurchasesSales.objects.all()
+        else:
+            client = Client.objects.get(User=user)
+            documents = Document.objects.filter(Client=client)
+            documentsData = DocumentSerializer(documents, many=True, context=serializer_context).data
+
+            documentsId = []
+
+            for document in documentsData:
+                id = document['Id']
+                documentsId.append(id)
+
+            purchasesSales = PurchasesSales.objects.filter(Document_id__in=documentsId)
+
+        queryset = self.filter_queryset(purchasesSales)
+        page = self.paginate_queryset(queryset)
+
+        serializer = PurchasesSalesSerializer(page, many=True, context=serializer_context)
+        return self.get_paginated_response(serializer.data)
 
 class PurchasesSalesDetail(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [DjangoModelPermissions]
     queryset = PurchasesSales.objects.all()
-    serializer_class = PurchasesSalesSerializer
+    serializer_class = PurchasesSalesDetailSerializer
     name='purchasessales-detail'
+
+    def get_queryset(self):
+        user = self.request.user
+        path = self.request.get_full_path()
+        purchasesSalesId = int(path.split('/')[2])
+        
+        if user.is_superuser or Group.objects.get(name='Employees').user_set.filter(id=user.id).exists():
+            purchasesSales = PurchasesSales.objects.all()
+        else:
+            try:
+                client = Client.objects.get(User=user)
+                purchasesSales = PurchasesSales.objects.get(Id=purchasesSalesId)
+                document = Document.objects.get(Id=purchasesSales.Document.Id)
+            except Client.DoesNotExist:
+                return PurchasesSales.objects.none()
+            except PurchasesSales.DoesNotExist:
+                return PurchasesSales.objects.none()
+            except Document.DoesNotExist:
+                return PurchasesSales.objects.none()
+
+            if document.Client != client:
+                return PurchasesSales.objects.none()
+
+            purchasesSales = PurchasesSales.objects.filter(Document_id=document.Id)
+
+        return purchasesSales
 
 class DeclarationFilter(FilterSet):
     DateFrom_From = DateTimeFilter(field_name='DateFrom', lookup_expr='gte')
@@ -126,15 +238,70 @@ class DeclarationList(generics.ListCreateAPIView):
     queryset = Declaration.objects.all()
     serializer_class = DeclarationSerializer
     name='declaration-list'
-    search_fields = ['Document', 'PIT', 'Department', 'DateFrom', 'DateTo']
-    ordering_fields = ['Document', 'PIT', 'Amount', 'Department', 'DateFrom', 'DateTo']
+    search_fields = ['Department', 'DateFrom', 'DateTo']
+    ordering_fields = ['Department', 'DateFrom', 'DateTo']
     filter_class = DeclarationFilter
+
+    def get(self, request, format=None):
+        user = self.request.user
+
+        serializer_context = {
+            'request': request,
+        }
+
+        if user.is_superuser or Group.objects.get(name='Employees').user_set.filter(id=user.id).exists():
+            declaration = Declaration.objects.all()
+        else:
+            client = Client.objects.get(User=user)
+            documents = Document.objects.filter(Client=client)
+            documentsData = DocumentSerializer(documents, many=True, context=serializer_context).data
+
+            documentsId = []
+
+            for document in documentsData:
+                id = document['Id']
+                documentsId.append(id)
+
+            declaration = Declaration.objects.filter(Document_id__in=documentsId)
+
+        queryset = self.filter_queryset(declaration)
+        page = self.paginate_queryset(queryset)
+
+        serializer = DeclarationSerializer(page, many=True, context=serializer_context)
+        return self.get_paginated_response(serializer.data)
 
 class DeclarationDetail(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [DjangoModelPermissions]
     queryset = Declaration.objects.all()
-    serializer_class = DeclarationSerializer
+    serializer_class = DeclarationDetailSerializer
     name='declaration-detail'
+    
+    def get_queryset(self):
+        user = self.request.user
+        path = self.request.get_full_path()
+        declarationId = int(path.split('/')[2])
+        
+        if user.is_superuser or Group.objects.get(name='Employees').user_set.filter(id=user.id).exists():
+            declaration = Declaration.objects.all()
+        else:
+            try:
+                client = Client.objects.get(User=user)
+                declaration = Declaration.objects.get(Id=declarationId)
+                document = Document.objects.get(Id=declaration.Document.Id)
+            except Client.DoesNotExist:
+                return Declaration.objects.none()
+            except Declaration.DoesNotExist:
+                return Declaration.objects.none()
+            except Document.DoesNotExist:
+                return Declaration.objects.none()
+
+            if document.Client != client:
+                declaration = Declaration.objects.none()
+                return declaration
+
+            declaration = Declaration.objects.filter(Document_id=document.Id)
+
+        return declaration
 
 class CurrencyList(generics.ListCreateAPIView):
     permission_classes = [DjangoModelPermissionsOrAnonReadOnly]
@@ -142,7 +309,7 @@ class CurrencyList(generics.ListCreateAPIView):
     serializer_class = CurrencySerializer
     name='currency-list'
     filter_fields = ['Name']
-    search_fields = ['Name']
+    search_fields = ['Name', 'Code', 'Country']
     ordering_fields = ['Name']
 
 class CurrencyDetail(generics.RetrieveUpdateDestroyAPIView):
@@ -156,8 +323,8 @@ class PITList(generics.ListCreateAPIView):
     queryset = PIT.objects.all()
     serializer_class = PITSerializer
     name='pit-list'
-    search_fields = ['Name',]
-    ordering_fields = ['Name',]
+    search_fields = ['Name', 'Desc', 'Deadline']
+    ordering_fields = ['Name', 'Deadline']
 
 class PITDetail(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [DjangoModelPermissions]

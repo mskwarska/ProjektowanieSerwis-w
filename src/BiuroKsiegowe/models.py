@@ -3,7 +3,7 @@ from django.db import models
 
 class Client(models.Model):
     Id = models.AutoField(primary_key=True)
-    User = models.ForeignKey('auth.User', related_name='Client', on_delete=models.DO_NOTHING)
+    User = models.ForeignKey('auth.User', related_name='Client', on_delete=models.CASCADE)
     Name = models.CharField(max_length=45, null=False)
     Surname = models.CharField(max_length=45, null=False)
     PhoneNumber = models.CharField(max_length=45, null=False)
@@ -18,7 +18,7 @@ class Client(models.Model):
 
     @property
     def GetClient(self):
-        return self.Name + ' ' + self.Surname + ' '
+        return self.Name + ' ' + self.Surname
 
     def __str__(self):
         return self.User.email
@@ -35,9 +35,9 @@ class DocumentType(models.Model):
 
 class Document(models.Model):
     Id = models.AutoField(primary_key=True)
-    DocumentType = models.ForeignKey(DocumentType, on_delete=models.DO_NOTHING)
-    Client = models.ForeignKey(Client, related_name='Documents', on_delete=models.DO_NOTHING)
-    CreatedBy = models.ForeignKey('auth.User', related_name='DocumentCreatedBy', on_delete=models.DO_NOTHING)
+    DocumentType = models.ForeignKey(DocumentType, null=True, on_delete=models.SET_NULL)
+    Client = models.ForeignKey(Client, related_name='Documents', on_delete=models.CASCADE)
+    CreatedBy = models.ForeignKey('auth.User', related_name='DocumentCreatedBy', null=True, on_delete=models.SET_NULL)
     CreationDate = models.DateTimeField(default=datetime.datetime.now())
 
     class Meta:
@@ -60,11 +60,11 @@ class Currency(models.Model):
 
 class PurchasesSales(models.Model):
     Id = models.AutoField(primary_key=True)
-    Document = models.ForeignKey(Document, on_delete=models.DO_NOTHING)
+    Document = models.ForeignKey(Document, on_delete=models.CASCADE)
     ProductName = models.CharField(max_length=45, null=False)
     NetAmount = models.DecimalField(decimal_places=2, max_digits=10)
     GrossAmount = models.DecimalField(decimal_places=2, max_digits=10)
-    Currency = models.ForeignKey(Currency, on_delete=models.DO_NOTHING)
+    Currency = models.ForeignKey(Currency, null=True, on_delete=models.SET_NULL)
     Tax = models.IntegerField()
 
     class Meta:
@@ -84,8 +84,8 @@ class PIT(models.Model):
 
 class Declaration(models.Model):
     Id = models.AutoField(primary_key=True)
-    Document = models.ForeignKey(Document, on_delete=models.DO_NOTHING)
-    PIT = models.ForeignKey(PIT, on_delete=models.DO_NOTHING)
+    Document = models.ForeignKey(Document, on_delete=models.CASCADE)
+    PIT = models.ForeignKey(PIT, null=True, on_delete=models.SET_NULL)
     Desc = models.TextField(default=None)
     Amount = models.CharField(max_length=45)
     Department = models.CharField(max_length=45)

@@ -33,6 +33,24 @@ class ClientSerializer(serializers.HyperlinkedModelSerializer):
 
         return value
 
+    def validate_PESEL(self, value):
+        if len(value) != 11:
+            raise serializers.ValidationError('PESEL musi składać sie z 11 cyfer.')
+
+        return value
+
+    def validate_NIP(self, value):
+        if value is not None and len(value) != 10:
+            raise serializers.ValidationError('NIP musi składać się z 10 znaków.')
+
+        return value
+
+    def validate_REGON(self, value):
+        if value is not None and len(value) != 9:
+            raise serializers.ValidationError('REGON musi składać się z 9 znaków.')
+
+        return value
+
     User = serializers.SlugRelatedField(
         queryset=User.objects.filter(is_staff=False, is_superuser=False),
         slug_field='email',
@@ -80,11 +98,22 @@ class DocumentSerializer(serializers.HyperlinkedModelSerializer):
 
     Client = serializers.SlugRelatedField(
         queryset=md.Client.objects.all(), 
-        slug_field='Name'
+        slug_field='Id'
     )
 
-    def perform_create(self, serializer):
-        serializer.save(CreatedBy=self.request.user)
+    def create(self, validated_data):
+        request = self.context.get('request', None)
+
+        if request:
+            validated_data['CreatedBy'] = request.user
+            return md.Document.objects.create(**validated_data)
+
+    def update(self, instance, validated_data):
+        validated_data['CreatedBy'] = instance.CreatedBy
+        validated_data['Client'] = instance.Client
+        instance.save()
+
+        return instance
 
     class Meta:
         model = md.Document
@@ -132,6 +161,35 @@ class PurchasesSalesSerializer(serializers.HyperlinkedModelSerializer):
         model = md.PurchasesSales
         fields = ['Id', 'Document', 'ProductName', 'NetAmount', 'GrossAmount', 'Currency', 'Tax']
 
+class PurchasesSalesDetailSerializer(serializers.HyperlinkedModelSerializer):
+    Currency = serializers.SlugRelatedField(
+        queryset=md.Currency.objects.all(), 
+        slug_field='Name'
+    )
+
+    def validate_netAmount(self, value):
+        if value < 0:
+            raise serializers.ValidationError("Kwota netto nie może być ujemna.")
+        
+        return value
+
+    def validate_grossAmount(self, value):
+        if value < 0:
+            raise serializers.ValidationError("Kwota brutto nie może być ujemna.")
+
+        return value
+
+    def validate_Tax(self, value):
+        if value < 0:
+            raise serializers.ValidationError("Podatek nie może być ujemny.")
+
+        return value
+
+    class Meta:
+        model = md.PurchasesSales
+        fields = ['Id', 'Document', 'ProductName', 'NetAmount', 'GrossAmount', 'Currency', 'Tax']
+        read_only_fields = ['Document',]
+
 class PITSerializer(serializers.ModelSerializer):
     class Meta:
         model = md.PIT
@@ -154,3 +212,14 @@ class DeclarationSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = md.Declaration
         fields = ['Id', 'Document', 'PIT', 'Desc', 'Amount', 'Department', 'DateFrom', 'DateTo']
+
+class DeclarationDetailSerializer(serializers.HyperlinkedModelSerializer):
+    PIT = serializers.SlugRelatedField(
+        queryset=md.PIT.objects.all(), 
+        slug_field='Name'
+    )
+
+    class Meta:
+        model = md.Declaration
+        fields = ['Id', 'Document', 'PIT', 'Desc', 'Amount', 'Department', 'DateFrom', 'DateTo']
+        read_only_fields = ['Document',]
