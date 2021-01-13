@@ -111,7 +111,8 @@ class DocumentSerializer(serializers.HyperlinkedModelSerializer):
     def update(self, instance, validated_data):
         validated_data['CreatedBy'] = instance.CreatedBy
         validated_data['Client'] = instance.Client
-        instance.save()
+        validated_data['CreationDate'] = instance.CreationDate
+        instance = validated_data
 
         return instance
 
