@@ -40,7 +40,7 @@ class ClientList(generics.ListCreateAPIView):
     name='client-list'
     filter_fields = ['Name', 'Surname', 'PhoneNumber', 'PESEL', 'CompanyName', 'CompanyAddress', 'NIP', 'REGON']
     search_fields = ['Name', 'Surname', 'PhoneNumber', 'PESEL', 'CompanyName', 'CompanyAddress', 'NIP', 'REGON']
-    ordering_fields = ['Name', 'Surname']
+    ordering_fields = ['Name', 'Surname', 'User', 'REGON']
 
     def get(self, request, format=None):
         user = self.request.user

@@ -4,7 +4,7 @@ from . import models as md
 from . import views
 import datetime
 
-class tesst(serializers.HyperlinkedModelSerializer):
+class UserClientDetailSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = User
         fields = ['email']
@@ -74,7 +74,7 @@ class ClientSerializer(serializers.HyperlinkedModelSerializer):
         fields = ['Id', 'User', 'Name', 'Surname', 'PhoneNumber', 'PESEL', 'CompanyName', 'CompanyAddress', 'NIP', 'REGON', 'Documents']
 
 class ClientDetailSerializer(serializers.HyperlinkedModelSerializer):
-    User = tesst(many=False, read_only=True)
+    User = UserClientDetailSerializer(many=False, read_only=True)
     Documents = serializers.HyperlinkedRelatedField(
         many=True,
         read_only=True,
