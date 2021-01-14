@@ -110,7 +110,6 @@ class DocumentSerializer(serializers.HyperlinkedModelSerializer):
 
     def update(self, instance, validated_data):
         validated_data['CreatedBy'] = instance.CreatedBy
-        validated_data['Client'] = instance.Client
         validated_data['CreationDate'] = instance.CreationDate
         instance = validated_data
 
@@ -119,7 +118,7 @@ class DocumentSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = md.Document
         fields = ['Id', 'DocumentType', 'Client', 'CreatedBy', 'CreationDate']
-        read_only_fields = ['CreationDate']
+        read_only_fields = ['CreationDate', 'CreatedBy']
 
 class CurrencySerializer(serializers.ModelSerializer):
     class Meta:
