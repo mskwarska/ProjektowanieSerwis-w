@@ -7,7 +7,7 @@ from rest_framework.reverse import reverse
 from firmaksiegowa.serializers import AccountSerializer, ClientSerializer, DocumentSerializer, \
     DeclarationSerializer, DocumentTypeSerializer, CurrencySerializer, Purchases_SalesSerializer, PITSerializer
 from firmaksiegowa.models import Account, Client, DocumentType, Document, Currency, Purchases_Sales, PIT, Declarations
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from rest_framework.permissions import IsAuthenticated, IsAdminUser,  IsAuthenticatedOrReadOnly
 import django_filters
 
 # Można również w ten sposób
@@ -70,7 +70,7 @@ class ClientList(generics.ListCreateAPIView):
     ordering_fields = ['Name', 'Surname']
 
 
-class ClientDetail(generics.RetrieveDestroyAPIView):
+class ClientDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Client.objects.all()
     serializer_class = ClientSerializer
     permission_classes = [IsAuthenticated]
@@ -79,7 +79,7 @@ class ClientDetail(generics.RetrieveDestroyAPIView):
 class DocumentTypeList(generics.ListCreateAPIView):
     queryset = DocumentType.objects.all()
     serializer_class = DocumentTypeSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated,]
     name = 'documentTypeList'
     filter_fields = ['Type']
     search_fields = ['Type']
