@@ -109,11 +109,9 @@ class DocumentSerializer(serializers.HyperlinkedModelSerializer):
             return md.Document.objects.create(**validated_data)
 
     def update(self, instance, validated_data):
-        validated_data['CreatedBy'] = instance.CreatedBy
-        validated_data['CreationDate'] = instance.CreationDate
-        instance = validated_data
+        instance.DocumentType = validated_data['DocumentType']
 
-        return instance
+        return super().update(instance, validated_data)
 
     class Meta:
         model = md.Document
